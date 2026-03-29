@@ -1,64 +1,81 @@
-from http.client import ImproperConnectionState
-from webbrowser import Chrome
-
-import requests
+import json
 import time
-import keyboard
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium_stealth import stealth
-
-headers = {
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8,fi;q=0.7',
-    'cache-control': 'max-age=0',
-    'priority': 'u=0, i',
-    'sec-ch-ua': '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'document',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-site': 'same-origin',
-    'sec-fetch-user': '?1',
-    'upgrade-insecure-requests': '1',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
-}
-
-response = requests.get('https://nova.otava.fi/', headers=headers)
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 url = "http://nova.otava.fi"
+#url = "http://bot.sannysoft.com"
 filename = "index.html"
 
-req = requests.get(url, headers=headers)
-
-options = webdriver.ChromeOptions()
-options.headless = True
+options = Options()
 options.add_argument("start-maximized")
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option('useAutomationExtension', False)
-driver = webdriver.Chrome()
 
-stealth(driver, languages=["en-US", "en"],
+#options.add_argument("--headless=new")
+options.add_argument("--use-subprocess")
+options.add_argument("--disable-blink-features=AutomationControlled")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+driver = webdriver.Chrome(options=options)
+
+
+stealth(driver,
+        languages=["en-US", "en"],
         vendor="Google Inc.",
         platform="Win32",
         webgl_vendor="Intel Inc.",
-        renderer="ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 (0x00002504) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-        fix_hairline=True)
+        renderer="Intel Iris OpenGL Engine",
+        fix_hairline=True,
+        )
 
 driver.get(url)
 
+def click(max, xpath):
+    try:
+        WebDriverWait(driver, timeout=max).until(EC.element_to_be_clickable((By.XPATH, xpath)))
+        driver.find_element(By.XPATH, xpath).click()
+    except Exception as e:
+        print(e)
+
+time.sleep(1)
+click(5, "//a[@href='login/student']")
+
+time.sleep(1)
+click(5, "//*[@id='main']/div/div[2]/div/ul/li[2]/button")
+
+time.sleep(1)
+click(5, "/html/body//div/div/div[1]/div/label/input")
+
+with open("userdata.json", "r") as f:
+    data = json.load(f)
+
+username = data["username"]
+password = data["password"]
+
+email_input = driver.find_element(By.XPATH, "//input[@id='username']")
+email_input.send_keys(username)
+
+password_input = driver.find_element(By.XPATH, "//input[@id='password']")
+password_input.send_keys(password)
+
+time.sleep(1)
+click(5, "//button[@id='login-btn']")
+
+click(5, "//button[normalize-space(text())='Yes']")
+
 time.sleep(1)
 
-login = driver.find_element(By.XPATH, "//a[@href='login/student']")
-login.click()
+driver.get("https://nova.otava.fi/materials/own")
 
-time.sleep(1)
-
-try:
-    driver.find_element(By.XPATH, "//button[normalize-space()='With Email Address']").click()
-except:
-    print("Button not found")
+WebDriverWait(driver, timeout=5).until(EC.element_to_be_clickable((By.XPATH, "//span[normalize-space(text())='Fokus 4 (LOPS21) digikirja']")))
+book = driver.find_element(By.XPATH, "//span[normalize-space(text())='Fokus 3 (LOPS21) digikirja']").click()
 
 input()
 
