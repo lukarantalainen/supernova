@@ -1,5 +1,6 @@
 import json
 import time
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -53,7 +54,9 @@ click(5, "//*[@id='main']/div/div[2]/div/ul/li[2]/button")
 time.sleep(1)
 click(5, "/html/body//div/div/div[1]/div/label/input")
 
-with open("userdata.json", "r") as f:
+desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+
+with open(desktop+"/userdata.json", "r") as f:
     data = json.load(f)
 
 username = data["username"]
@@ -74,8 +77,7 @@ time.sleep(1)
 
 driver.get("https://nova.otava.fi/materials/own")
 
-WebDriverWait(driver, timeout=5).until(EC.element_to_be_clickable((By.XPATH, "//span[normalize-space(text())='Fokus 4 (LOPS21) digikirja']")))
-book = driver.find_element(By.XPATH, "//span[normalize-space(text())='Fokus 3 (LOPS21) digikirja']").click()
+click(5, "//span[normalize-space(text())='Fokus 3 (LOPS21) digikirja']")
 
 input()
 
